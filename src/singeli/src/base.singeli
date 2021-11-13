@@ -1,0 +1,31 @@
+include 'skin/c'
+include 'arch/c'
+def cdiv{a,b} = (a+b-1)/b
+def rare{x:u1} = emit{u1, '__builtin_expect', x, 0}
+def isunsigned{T} = isint{T} & ~issigned{T}
+def assert{x:u1} = emit{void, 'si_assert', x}
+
+def unroll{vars,begin,end,block & match{kind{begin},'number'} & match{kind{end},'number'}} = {
+  def f{i,l & i==l} = 0
+  def f{i,l & i!=l} = {
+    exec{i, vars, block}
+    f{i+1, l}
+  }
+  f{begin,end}
+}
+def for{vars,begin,end,block} = {
+  i:u64 = begin
+  while (i < end) {
+    exec{i, vars, block}
+    i = i+1
+  }
+}
+def maxvalue{T & T==u8 } = 0xff
+def maxvalue{T & T==u16} = 0xffff
+def maxvalue{T & T==u32} = 0xffffffff
+
+# various utilities
+def      isintv{T} =      isint{eltype{T}}
+def    isfloatv{T} =    isfloat{eltype{T}}
+def   issignedv{T} =   issigned{eltype{T}}
+def isunsignedv{T} = isunsigned{eltype{T}}

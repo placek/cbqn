@@ -1,0 +1,34 @@
+# min & max
+def min{a:T,b:T & T==[32]i8 } = emit{T, '_mm256_min_epi8',  a, b}; def min{a:T,b:T & T==[32]u8 } = emit{T, '_mm256_min_epu8',  a, b}
+def min{a:T,b:T & T==[16]i16} = emit{T, '_mm256_min_epi16', a, b}; def min{a:T,b:T & T==[16]u16} = emit{T, '_mm256_min_epu16', a, b}
+def min{a:T,b:T & T==[ 8]i32} = emit{T, '_mm256_min_epi32', a, b}; def min{a:T,b:T & T==[ 8]u32} = emit{T, '_mm256_min_epu32', a, b}
+def max{a:T,b:T & T==[32]i8 } = emit{T, '_mm256_max_epi8',  a, b}; def max{a:T,b:T & T==[32]u8 } = emit{T, '_mm256_max_epu8',  a, b}
+def max{a:T,b:T & T==[16]i16} = emit{T, '_mm256_max_epi16', a, b}; def max{a:T,b:T & T==[16]u16} = emit{T, '_mm256_max_epu16', a, b}
+def max{a:T,b:T & T==[ 8]i32} = emit{T, '_mm256_max_epi32', a, b}; def max{a:T,b:T & T==[ 8]u32} = emit{T, '_mm256_max_epu32', a, b}
+
+# signed comparison
+def __eq{a:T,b:T & T==[32]i8 } = emit{[32]u8,  '_mm256_cmpeq_epi8',  a, b}
+def __eq{a:T,b:T & T==[16]i16} = emit{[16]u16, '_mm256_cmpeq_epi16', a, b}
+def __eq{a:T,b:T & T==[ 8]i32} = emit{[ 8]u32, '_mm256_cmpeq_epi32', a, b}
+def __gt{a:T,b:T & T==[32]i8 } = emit{[32]u8,  '_mm256_cmpgt_epi8',  a, b}
+def __gt{a:T,b:T & T==[16]i16} = emit{[16]u16, '_mm256_cmpgt_epi16', a, b}
+def __gt{a:T,b:T & T==[ 8]i32} = emit{[ 8]u32, '_mm256_cmpgt_epi32', a, b}
+def __lt{a:T,b:T & w256{T} & issignedv{T}} = b>a
+def __ge{a:T,b:T & w256{T} & issignedv{T}} = ~(b>a)
+def __le{a:T,b:T & w256{T} & issignedv{T}} = ~(a>b)
+# unsigned comparison
+def __eq{a:T,b:T & T==[32]u8 } = emit{[32]u8,  '_mm256_cmpeq_epi8',  a, b}
+def __eq{a:T,b:T & T==[16]u16} = emit{[16]u16, '_mm256_cmpeq_epi16', a, b}
+def __eq{a:T,b:T & T==[ 8]u32} = emit{[ 8]u32, '_mm256_cmpeq_epi32', a, b}
+def __le{a:T,b:T & w256{T} & isunsignedv{T}} = a==min{a,b}
+def __ge{a:T,b:T & w256{T} & isunsignedv{T}} = a==max{a,b}
+def __lt{a:T,b:T & w256{T} & isunsignedv{T}} = ~(a>=b)
+def __gt{a:T,b:T & w256{T} & isunsignedv{T}} = ~(a<=b)
+# rest of comparison
+def __ne{a:T,b:T & w256{T} & isintv{T}} = ~(b==a)
+
+def getmask{x:[32]u8} = emit{u32, '_mm256_movemask_epi8', x}
+def getmask{x:[16]u16} = {
+  msk:u32 = getmask{emit{[32]u8, '_mm256_packs_epi16', x, broadcast{[16]u16, 0}}}
+  (msk&255) | (msk>>8) # TODO try out permute4x64 for fixing up
+}
